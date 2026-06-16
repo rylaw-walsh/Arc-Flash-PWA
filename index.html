@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>My PWA App</title>
+  <title>Arc Flash Interactive Book</title>
 
   <link rel="stylesheet" href="styles.css" />
   <link rel="manifest" href="manifest.json" />
@@ -14,15 +14,29 @@
 
 <body>
   <main class="app">
-    <h1>My Progressive Web App</h1>
-    <p>This app is running from GitHub Pages.</p>
+    <h1>Arc Flash Interactive Book</h1>
+    <p>Upload a PDF and read it in a mobile-first viewer with page navigation.</p>
 
-    <button id="testButton">Test App</button>
+    <label class="file-upload">
+      <input id="pdfFileInput" type="file" accept="application/pdf" />
+      Select a PDF file
+    </label>
+
+    <div id="readerControls" class="reader-controls hidden">
+      <button id="prevPage" class="nav-btn">Previous</button>
+      <span id="pageIndicator">Page 0 / 0</span>
+      <button id="nextPage" class="nav-btn">Next</button>
+    </div>
+
+    <div id="canvasWrapper" class="canvas-wrapper hidden">
+      <canvas id="pdfCanvas"></canvas>
+    </div>
 
     <p id="message"></p>
     <p id="status">Checking service worker...</p>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.15.349/build/pdf.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
