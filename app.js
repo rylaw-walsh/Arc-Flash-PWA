@@ -24,6 +24,10 @@ let touchStartX = 0;
 let touchStartY = 0;
 let isSwipeActive = false;
 
+if (typeof pdfjsLib === 'undefined') {
+  throw new Error('PDF.js did not load. Check the CDN script URL and network access.');
+}
+
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.15.349/build/pdf.worker.min.js';
 
