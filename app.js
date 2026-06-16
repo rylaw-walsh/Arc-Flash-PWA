@@ -24,12 +24,10 @@ let touchStartX = 0;
 let touchStartY = 0;
 let isSwipeActive = false;
 
-if (typeof pdfjsLib === 'undefined') {
-  throw new Error('PDF.js did not load. Check the CDN script URL and network access.');
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3/build/pdf.worker.min.js';
 }
-
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://unpkg.com/pdfjs-dist@3.15.349/build/pdf.worker.min.js';
 
 function updateStatus(text) {
   statusLabel.textContent = text;
@@ -74,6 +72,11 @@ async function renderPage(pageNumber) {
 
 async function loadPdfDocument() {
   updateStatus('Loading the book...');
+
+  if (typeof pdfjsLib === 'undefined') {
+    updateStatus('PDF.js library failed to load. Check your network connection.');
+    return;
+  }
 
   try {
     pdfDoc = await pdfjsLib.getDocument(PDF_PATH).promise;
