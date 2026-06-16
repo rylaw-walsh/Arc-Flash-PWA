@@ -1,21 +1,11 @@
-const REPO_NAME = "Arc-Flash-PWA";
-
 document.getElementById("testButton").addEventListener("click", () => {
   document.getElementById("message").innerText = "The app is working.";
 });
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
-    const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-
-    const serviceWorkerPath = isLocalhost
-      ? "./service-worker.js"
-      : `/${REPO_NAME}/service-worker.js`;
-
     try {
-      const registration = await navigator.serviceWorker.register(serviceWorkerPath);
+      const registration = await navigator.serviceWorker.register("./service-worker.js");
 
       document.getElementById("status").innerText =
         "Service worker registered successfully.";
