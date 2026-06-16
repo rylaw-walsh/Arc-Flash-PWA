@@ -1,39 +1,37 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Arc Flash Interactive Book</title>
-
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="manifest" href="manifest.json" />
-
   <meta name="theme-color" content="#0066cc" />
+  <title>Arc Flash Interactive Book</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <main class="app">
-    <h1>Arc Flash Interactive Book</h1>
-    <p>Upload a PDF and read it in a mobile-first viewer with page navigation.</p>
+    <header class="hero">
+      <h1>Arc Flash Interactive Book</h1>
+      <p>Read the fixed PDF guide with page controls, zoom, swipe, and offline support.</p>
+    </header>
 
-    <label class="file-upload">
-      <input id="pdfFileInput" type="file" accept="application/pdf" />
-      Select a PDF file
-    </label>
-
-    <div id="readerControls" class="reader-controls hidden">
+    <section class="reader-controls">
       <button id="prevPage" class="nav-btn">Previous</button>
       <span id="pageIndicator">Page 0 / 0</span>
       <button id="nextPage" class="nav-btn">Next</button>
-    </div>
+    </section>
 
-    <div id="canvasWrapper" class="canvas-wrapper hidden">
-      <canvas id="pdfCanvas"></canvas>
-    </div>
+    <section class="reader-controls reader-controls-secondary">
+      <button id="zoomOut" class="nav-btn">Zoom -</button>
+      <span id="zoomIndicator">100%</span>
+      <button id="zoomIn" class="nav-btn">Zoom +</button>
+    </section>
 
-    <p id="message"></p>
-    <p id="status">Checking service worker...</p>
+    <section id="canvasWrapper" class="canvas-wrapper">
+      <canvas id="pdfCanvas" aria-label="PDF page viewer"></canvas>
+    </section>
+
+    <div id="status" class="status">Loading the book...</div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.15.349/build/pdf.min.js"></script>

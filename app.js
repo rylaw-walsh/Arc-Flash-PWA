@@ -1,30 +1,48 @@
-﻿const fileInput = document.getElementById("pdfFileInput");
-const prevBtn = document.getElementById("prevPage");
-const nextBtn = document.getElementById("nextPage");
-const pageIndicator = document.getElementById("pageIndicator");
-const message = document.getElementById("message");
-const status = document.getElementById("status");
-const canvasWrapper = document.getElementById("canvasWrapper");
-const readerControls = document.getElementById("readerControls");
-const canvas = document.getElementById("pdfCanvas");
-const ctx = canvas.getContext("2d");
+﻿const PDF_PATH = './pdfs/arc-flash-guide.pdf';
+const ZOOM_STEP = 0.2;
+const MIN_ZOOM = 0.7;
+const MAX_ZOOM = 2.4;
+const SWIPE_THRESHOLD = 56;
+const MAX_VERTICAL_DELTA = 60;
+
+const prevBtn = document.getElementById('prevPage');
+const nextBtn = document.getElementById('nextPage');
+const zoomInBtn = document.getElementById('zoomIn');
+const zoomOutBtn = document.getElementById('zoomOut');
+const pageIndicator = document.getElementById('pageIndicator');
+const zoomIndicator = document.getElementById('zoomIndicator');
+const statusLabel = document.getElementById('status');
+const canvasWrapper = document.getElementById('canvasWrapper');
+const canvas = document.getElementById('pdfCanvas');
+const ctx = canvas.getContext('2d');
 
 let pdfDoc = null;
 let currentPage = 1;
 let totalPages = 0;
+let zoomLevel = 1.0;
+let touchStartX = 0;
+let touchStartY = 0;
+let isSwipeActive = false;
 
-function showMessage(text, isError = false) {
-  message.innerText = text;
-  message.className = isError ? "message error" : "message";
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.15.349/build/pdf.worker.min.js';
+
+function updateStatus(text) {
+  statusLabel.textContent = text;
 }
 
 function updateControls() {
-  if (!pdfDoc) return;
-  pageIndicator.innerText = `Page ${currentPage} / ${totalPages}`;
+  pageIndicator.textContent = `Page ${currentPage} / ${totalPages}`;
+  zoomIndicator.textContent = `${Math.round(zoomLevel * 100)}%`;
   prevBtn.disabled = currentPage <= 1;
   nextBtn.disabled = currentPage >= totalPages;
-  readerControls.classList.remove("hidden");
-  canvasWrapper.classList.remove("hidden");
+  zoomOutBtn.disabled = zoomLevel <= MIN_ZOOM;
+  zoomInBtn.disabled = zoomLevel >= MAX_ZOOM;
+}
+
+function setCanvasSize(viewport) {
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
 }
 
 async function renderPage(pageNumber) {
@@ -32,12 +50,12 @@ async function renderPage(pageNumber) {
 
   const page = await pdfDoc.getPage(pageNumber);
   const viewport = page.getViewport({ scale: 1 });
-  const desiredWidth = Math.min(viewport.width, window.innerWidth - 48);
-  const scale = desiredWidth / viewport.width;
-  const scaledViewport = page.getViewport({ scale });
+  const wrapperWidth = canvasWrapper.clientWidth;
+  const baseScale = Math.max((wrapperWidth - 16) / viewport.width, 0.6);
+  const finalScale = baseScale * zoomLevel;
+  const scaledViewport = page.getViewport({ scale: finalScale });
 
-  canvas.width = scaledViewport.width;
-  canvas.height = scaledViewport.height;
+  setCanvasSize(scaledViewport);
 
   const renderContext = {
     canvasContext: ctx,
@@ -47,67 +65,93 @@ async function renderPage(pageNumber) {
   await page.render(renderContext).promise;
   currentPage = pageNumber;
   updateControls();
-  showMessage("Swipe or use the buttons to move through the book.");
+  updateStatus('Swipe left or right, or use the buttons to change pages.');
 }
 
-async function loadPDF(arrayBuffer) {
-  if (!arrayBuffer) return;
+async function loadPdfDocument() {
+  updateStatus('Loading the book...');
 
   try {
-    pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    pdfDoc = await pdfjsLib.getDocument(PDF_PATH).promise;
     totalPages = pdfDoc.numPages;
     currentPage = 1;
-    status.innerText = "PDF loaded successfully.";
     await renderPage(currentPage);
   } catch (error) {
-    showMessage("Unable to load the PDF. Please try another file.", true);
+    updateStatus('Unable to load the book. Check the PDF path.');
     console.error(error);
   }
 }
 
-fileInput.addEventListener("change", event => {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
+function changePage(delta) {
+  const next = currentPage + delta;
+  if (next >= 1 && next <= totalPages) {
+    renderPage(next);
+  }
+}
 
-  if (file.type !== "application/pdf") {
-    showMessage("Please select a valid PDF file.", true);
+function changeZoom(delta) {
+  zoomLevel = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoomLevel + delta));
+  renderPage(currentPage);
+}
+
+prevBtn.addEventListener('click', () => changePage(-1));
+nextBtn.addEventListener('click', () => changePage(1));
+zoomOutBtn.addEventListener('click', () => changeZoom(-ZOOM_STEP));
+zoomInBtn.addEventListener('click', () => changeZoom(ZOOM_STEP));
+
+canvasWrapper.addEventListener('touchstart', event => {
+  if (event.touches.length !== 1) return;
+  touchStartX = event.touches[0].clientX;
+  touchStartY = event.touches[0].clientY;
+  isSwipeActive = true;
+});
+
+canvasWrapper.addEventListener('touchmove', event => {
+  if (!isSwipeActive || event.touches.length !== 1) return;
+
+  const touch = event.touches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 20) {
+    event.preventDefault();
+  }
+});
+
+canvasWrapper.addEventListener('touchend', event => {
+  if (!isSwipeActive) return;
+  isSwipeActive = false;
+
+  const touch = event.changedTouches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+
+  if (Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaY) > MAX_VERTICAL_DELTA) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = () => loadPDF(reader.result);
-  reader.readAsArrayBuffer(file);
-  status.innerText = "Loading PDF...";
-  showMessage("");
-});
-
-prevBtn.addEventListener("click", () => {
-  if (currentPage > 1) {
-    renderPage(currentPage - 1);
+  if (deltaX < 0) {
+    changePage(1);
+  } else if (deltaX > 0) {
+    changePage(-1);
   }
 });
 
-nextBtn.addEventListener("click", () => {
-  if (currentPage < totalPages) {
-    renderPage(currentPage + 1);
+window.addEventListener('resize', () => {
+  if (pdfDoc) {
+    renderPage(currentPage);
   }
 });
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.15.349/build/pdf.worker.min.js";
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register("./service-worker.js");
-
-      status.innerText = "Service worker registered successfully.";
-      console.log("Service worker registered:", registration);
+      await navigator.serviceWorker.register('./service-worker.js');
+      console.log('Service worker registered.');
     } catch (error) {
-      status.innerText = "Service worker registration failed. Check the Console.";
-      console.error("Service worker registration failed:", error);
+      console.error('Service worker registration failed:', error);
     }
   });
-} else {
-  status.innerText = "Service workers are not supported in this browser.";
 }
+
+loadPdfDocument();
