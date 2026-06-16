@@ -153,8 +153,11 @@ window.addEventListener('resize', () => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      await navigator.serviceWorker.register('./service-worker.js');
-      console.log('Service worker registered.');
+      const registration = await navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' });
+      console.log('Service worker registered.', registration);
+      if (registration.update) {
+        registration.update();
+      }
     } catch (error) {
       console.error('Service worker registration failed:', error);
     }

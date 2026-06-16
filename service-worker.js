@@ -9,7 +9,10 @@ const ASSETS_TO_CACHE = [
   './pdfs/arc-flash-guide.pdf'
 ];
 
+console.log('Service worker loaded:', CACHE_NAME);
+
 self.addEventListener('install', event => {
+  console.log('Service worker installing:', CACHE_NAME);
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
       Promise.all(
