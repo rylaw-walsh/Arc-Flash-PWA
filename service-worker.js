@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'arcflash-pwa-cache-v2';
+﻿const CACHE_NAME = 'arcflash-pwa-cache-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -7,8 +7,8 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './service-worker.js',
   './pdfs/arc-flash-guide.pdf',
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.15.349/pdf.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.15.349/pdf.worker.min.js'
+  'https://unpkg.com/pdfjs-dist@3.15.349/build/pdf.min.js',
+  'https://unpkg.com/pdfjs-dist@3.15.349/build/pdf.worker.min.js'
 ];
 
 self.addEventListener('install', event => {

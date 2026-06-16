@@ -29,7 +29,7 @@ if (typeof pdfjsLib === 'undefined') {
 }
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.15.349/pdf.worker.min.js';
+  'https://unpkg.com/pdfjs-dist@3.15.349/build/pdf.worker.min.js';
 
 function updateStatus(text) {
   statusLabel.textContent = text;
