@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'arcflash-pwa-cache-v5';
+﻿const CACHE_NAME = 'arcflash-pwa-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -34,6 +34,28 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const requestUrl = new URL(event.request.url);
+  const isPdfRequest = requestUrl.pathname.endsWith('/pdfs/arc-flash-guide.pdf');
+  const isSameOrigin = requestUrl.origin === self.location.origin;
+
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  if (isPdfRequest && isSameOrigin) {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse =>
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          })
+        )
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {
@@ -41,14 +63,12 @@ self.addEventListener('fetch', event => {
       }
       return fetch(event.request).then(networkResponse => {
         return caches.open(CACHE_NAME).then(cache => {
-          if (event.request.method === 'GET' && event.request.url.startsWith(self.location.origin)) {
+          if (event.request.url.startsWith(self.location.origin)) {
             cache.put(event.request, networkResponse.clone());
           }
           return networkResponse;
         });
       });
-    }).catch(() => {
-      return caches.match('./index.html');
-    })
+    }).catch(() => caches.match('./index.html'))
   );
 });
