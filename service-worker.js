@@ -6,14 +6,22 @@ const ASSETS_TO_CACHE = [
   './app.js',
   './manifest.json',
   './service-worker.js',
-  './pdfs/arc-flash-guide.pdf',
-  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.14.305/build/pdf.min.js',
-  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.14.305/build/pdf.worker.min.js'
+  './pdfs/arc-flash-guide.pdf'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(
+        ASSETS_TO_CACHE.map(async asset => {
+          try {
+            await cache.add(asset);
+          } catch (error) {
+            console.warn('Service worker failed to cache', asset, error);
+          }
+        })
+      )
+    )
   );
   self.skipWaiting();
 });
