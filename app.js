@@ -26,7 +26,7 @@ let isSwipeActive = false;
 
 if (typeof pdfjsLib !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.14.305/build/pdf.worker.min.js';
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.108/pdf.worker.min.js';
 }
 
 function updateStatus(text) {
